@@ -1,0 +1,32 @@
+*{box-sizing:border-box;}
+html{background: #000;}
+body{margin:0; padding:0;}
+
+.container{width:655px; margin:0 auto; padding:0 20px;}
+#game{width:655px; margin:20px auto;}
+#gameBoardContainer{width:320px; height:600px; float:left;}
+	#moving{z-index:8; border:10px double #ccc;}
+	#board{z-index:9; border:10px double #ccc;}
+	#animations{z-index:10; border:10px double #ff00b1;}
+	#moving, #board, #animations{position:absolute;  }
+
+#nextBlockContainer{width:140px; height:140px; margin-left:10px; float:left; }
+	#nextBlockContainer canvas{margin-bottom:10px; border:10px double #ccc; border-radius: 20px;}
+	
+#stop{width:100px; margin:0 auto; cursor:pointer;}
+
+#mobileBtns{display:none;}
+	
+* html .clearfix {height:1%;}
+.clearfix {display:inline-block;}
+.clearfix:after {display:block; height:0; visibility:hidden; font-size:0; content:" "; clear:both;}
+
+@media only screen and (max-width: 600px) {
+	html{overflow:hidden}
+	.container,#game{width:500px; overflow:hidden;}
+	#stop{display:none;}
+	#mobileBtns{display:block; width:400px; margin:10px 0;}
+		#mobileBtns button{display:block; width:100px; height:85px; float:left; font-size:50px;}
+}
+
+
