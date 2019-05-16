@@ -1,14 +1,12 @@
  //https://www.colinfahey.com/tetris/tetris_diagram_pieces_orientations_new.jpg
 class block{
-	constructor(id, shapeId, speedMulti = 1){
-		speedMulti = speedMulti+=1
+	constructor(id, shapeId){
 		this.id = id;
 		this.shapeId = shapeId;
+		this.pos = {x:30, y:0};
 		this.colors = ['red', 'blue', 'green', 'orange', 'yellow', 'black', 'purple', 'pink', 'DarkOliveGreen'];
 		this.rotated = 0;
 		this.falling = true;
-		this.speeds = {default:1*speedMulti, speedUp:2*speedMulti, current:1*speedMulti}
-		this.pos = {x:30, y:-5} ;
 		this.buildBlock();
 		this.widthChart();
 		this.heightChart();
@@ -22,13 +20,11 @@ class block{
 
 		this.buildBlock();
 	}
-	update(level = 1){
-		if(this.falling){
-			this.pos.y += this.speeds.current;
+	draw(cnv, img){
+		if(cnv.canvas.id == 'nextBlock' ){
+			this.pos = {x:10, y:20};
 			this.buildBlock();
 		}
-	}
-	draw(cnv, img){
 		for(let i=0; i < this.pieces[this.shapeId][this.rotated].length; i++){
 			cnv.drawImage(img, (this.shapeId * 30), 0, 30, 30, this.pieces[this.shapeId][this.rotated][i].x, this.pieces[this.shapeId][this.rotated][i].y, 30, 30);
 		}

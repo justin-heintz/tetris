@@ -1,9 +1,22 @@
+@font-face {
+    font-family: 'tetris_blocks_2.0regular';
+    src: url('../fonts/tetris/tetrisblocks2.0-webfont.woff2') format('woff2'),
+         url('../fonts/tetris/tetrisblocks2.0-webfont.woff') format('woff');
+    font-weight:normal; font-style:normal;
+}
+.noSelect{-webkit-user-select:none; -moz-user-select: none; -ms-user-select:none; user-select: none;}
+
 *{box-sizing:border-box;}
 html{background: #000;}
-body{margin:0; padding:0;}
+body{margin:0; padding:0; overflow-x: hidden;}
 
 .container{width:655px; margin:0 auto; padding:0 20px;}
 #game{width:655px; margin:20px auto;}
+
+#game #titleScreen{width:470px; height:620px; padding:10px; position:absolute; top:20px; z-index:11; background:#771f1f; text-align:center; border: 8px solid rgba(255, 255, 255, 0.32);}
+	#game #titleScreen h1{margin:0; font-family:'tetris_blocks_2.0regular'; font-size:80px; color:#fff; font-weight:normal;}
+	#game #titleScreen #new{margin-top:20px; border:0; outline:0; padding:5px 10px; background:#fff; font-weight:bold; font-size:17px; cursor:pointer;}
+
 #gameBoardContainer{width:320px; height:600px; float:left;}
 	#moving{z-index:8; border:10px double #ccc;}
 	#board{z-index:9; border:10px double #ccc;}
@@ -13,7 +26,8 @@ body{margin:0; padding:0;}
 #nextBlockContainer{width:140px; height:140px; margin-left:10px; float:left; }
 	#nextBlockContainer canvas{margin-bottom:10px; border:10px double #ccc; border-radius: 20px;}
 	
-#stop{width:100px; margin:0 auto; cursor:pointer;}
+#stop{display:none; width:100%; margin-top:20px; border:0; outline:0; padding:5px 10px; background:#fff; font-weight:bold; font-size:17px; cursor:pointer;}
+ 
 
 #mobileBtns{display:none;}
 	
@@ -25,6 +39,7 @@ body{margin:0; padding:0;}
 	html{overflow:hidden}
 	.container,#game{width:500px; overflow:hidden;}
 	#stop{display:none;}
+	#mobileBtns.onTitleScreen{display:none!important}
 	#mobileBtns{display:block; width:400px; margin:10px 0;}
 		#mobileBtns button{display:block; width:100px; height:85px; float:left; font-size:50px;}
 }

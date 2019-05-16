@@ -1,11 +1,12 @@
-//fix end game when blocks touch top of screen
 //if keeping mobile opt code
-//work on collision + flipping into another piece 
-//need a score
 //http://detectmobilebrowsers.com/
-
+//need a restart game
+//work on collision + flipping into another piece 
+//need fix score
+//i need to fix collision now with the ticks
+//move general functions into their own class rather then have them in part of the game loop
 window.onload = function(e){
-	g = new game();
+	
 	usedKeys = [37, 38, 39, 40];
 	//mobile press arrow buttons
 	document.getElementById('left').addEventListener("touchstart", function(event){if(g.status != 1 && g.status != 2){ g.keyAction[37].pressed = true;}});
@@ -32,12 +33,48 @@ window.onload = function(e){
 			event.preventDefault();
 			g.keyAction[event.which].pressed = false;
 		}
+		//dev to make new game fast
+		if( event.which == 27){
+			g = new game();
+		}
 	});
-	//pause button pressed
-	document.getElementById('stop').addEventListener('click',function(e){ g.pause(this);});
-	window.onblur = function(){if(g.status == 0){ g.pause(document.getElementById('stop'));}}
-}; 
+	//start new game
+	document.getElementById('new').addEventListener('click',function(e){ 
+		document.getElementById('stop').style.display = "block";
+		document.getElementById('titleScreen').style.display =  "none";
+		document.getElementById('mobileBtns').classList.remove("onTitleScreen");
 
+		g = new game();
+	});	
+	//pause button pressed
+	document.getElementById('stop').addEventListener('click',function(e){ 
+		g.pause(this);
+	});
+	window.onblur = function(){
+		if(window.g != undefined && g.status == 0){ 
+			g.pause(document.getElementById('stop'));
+		}
+	}
+}; 
+class tick{
+	constructor(lengths){
+		this.time = new Date();
+		this.length = lengths;		
+	}
+	hasTicked(){
+		if((new Date() - this.time)/1000 >= this.length.current){
+			this.time = new Date();
+			return true;
+		}else{
+			return false
+		}
+	}
+	dec(decSpeed){
+		this.length.default -= decSpeed;
+		this.length.current -= decSpeed;
+		//this.length.speedUp -= decSpeed;
+	}
+}
 class game{
 	constructor(){
 		//Canvas
@@ -57,16 +94,19 @@ class game{
 		this.lines = 0;
 		this.score = 0;
 		this.linesScore = {1:40, 2:100, 3:300, 4:1200};
-		this.level = 0;
+		this.level = {current:0, old:0};
 		this.status = 0;
-		this.statusLookup = {0:'Running', 1:'Paused', 2:'Game Over', 3:'animationRunning'};
+		this.statusLookup = {0:'Running', 1:'Paused', 2:'Game Over', 3:'animationRunning', 4:'Title Screen'};
 		this.keySpeed = {directions:0.1, rotate:0.29};
 		this.keyAction = {
-			37:{pressed:false, when:new Date()}, 
-			38:{pressed:false, when:new Date()}, 
-			39:{pressed:false, when:new Date()}, 
-			40:{pressed:false, when:new Date()}
+			37:{pressed:false, when:new Date(),tick:new tick()}, 
+			38:{pressed:false, when:new Date(),tick:new tick()}, 
+			39:{pressed:false, when:new Date(),tick:new tick()}, 
+			40:{pressed:false, when:new Date(),tick:new tick()}
 		};
+		
+		//sets how fast the game is running
+		this.gameTick = new tick( {default:0.8, current:0.8, speedUp:0.1} );
 		
 		//flash animation
 		this.animationRunning = false;
@@ -80,24 +120,35 @@ class game{
 		this.blocks = [];
 		this.activeBlock = 0 ;
 		this.generateBlockList();
-		this.nextBlock = new block(undefined, this.pickBlock(), this.level);
-		this.blocks.push(new block(this.activeBlock, this.pickBlock(),this.level));
+		this.nextBlock = new block(undefined, this.pickBlock());
+		this.blocks.push(new block(this.activeBlock, this.pickBlock()));
 		this.ab = this.blocks[this.activeBlock];
 		
 		//Game Loop
 		MainLoop.setUpdate(this.update.bind(this)).setDraw(this.draw.bind(this)).start();
 	}
-	generateBlockList(){this.blocksToPick = [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6];}
-	random(min, max){return Math.floor(Math.random() * (max - min)) + min;}
+	shuffle(array) {
+		array.sort(() => Math.random() - 0.5);
+	}	
+	random(min, max){
+		var rng = new Uint8Array(1);
+		crypto.getRandomValues(rng);
+		return Math.floor((rng[0] / 256) * (max + 1 - min) + min);		
+	}	
+	generateBlockList(){
+		//[0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6]
+		this.blocksToPick = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6];
+		this.shuffle(this.blocksToPick);
+	}
 	pickBlock(){
 		if(this.blocksToPick.length == 0){this.generateBlockList();}
-		return this.blocksToPick.splice( this.random(0, this.blocksToPick.length - 1), 1)[0];
+		return this.blocksToPick.splice(this.random(0, this.blocksToPick.length - 1), 1)[0];;
 	}
 	pause(btn){
 		if(this.status == 0){
 			this.status = 1;
 			btn.textContent = 'UnPause';
-		}else{
+		}else if(this.status == 1){
 			this.status = 0;
 			btn.textContent = 'Pause Game';
 		}		
@@ -105,14 +156,16 @@ class game{
 	update(){
 		if(this.status == 0){
 			//setting vars
-			this.ab = this.blocks[this.activeBlock];
+			this.ab 	= this.blocks[this.activeBlock];
 			var shapeId = this.ab.shapeId;
 			var rotated = this.ab.rotated;
 			var colored = this.ab.colors[shapeId];
-			var pieces =  this.ab.pieces[shapeId][rotated];
+			var pieces 	= this.ab.pieces[shapeId][rotated];
 			
 			//key presses and release			
-			if(!this.keyAction[40].pressed){this.ab.speeds.current = this.ab.speeds.default;}
+			if(!this.keyAction[40].pressed){
+				this.gameTick.length.current = this.gameTick.length.default;
+			}
 			if(this.keyAction[37].pressed){
 				if((new Date() - this.keyAction[37].when)/1000 >= this.keySpeed.directions){
 					if(!this.board.cc_walls(this.ab, 0) && !this.board.cc_blocks(this.ab,-1)){
@@ -135,23 +188,39 @@ class game{
 					this.keyAction[38].when = new Date();
 				}
 			}
-			if(this.keyAction[40].pressed){this.ab.speeds.current = this.ab.speeds.speedUp;}
+			if(this.keyAction[40].pressed){
+				this.gameTick.length.current = this.gameTick.length.speedUp;
+			}
 			
 			//check collision with walls
-			if(this.board.cc_walls(this.ab, 2)){this.ab.falling = false; this.ab.pos.y = 600;}
+			if(this.board.cc_walls(this.ab, 2)){
+				this.ab.falling = false; 
+				this.ab.pos.y = 600;
+			}
 			
 			//check collision with blocks
 			if(this.board.cc_blocks(this.ab)){
 				this.ab.falling = false;
+				
+				//should this collision be a game over 
 				if(this.board.cc_game_over(this.ab)){
 					this.status = 2;	
 				}
 			}
 			
-			if(this.status != 3){this.ab.update();}
+			if(this.status != 3){
+				if(this.gameTick.hasTicked()){
+					this.ab.pos.y += 30;
+				}
+				this.ab.buildBlock();
+			}
 
 			//block isn't falling any more
 			if(!this.ab.falling){
+//========================
+//if the block isnt falling this is where I need to give a delay to allow the player to move the block left or right
+//before we insert the block into the board we need a delay
+//========================
 				
 				//insert block into grid	
 				this.board.insert(pieces, {id:this.activeBlock, color:colored, shapeId:shapeId});
@@ -160,9 +229,14 @@ class game{
 				this.removing = this.board.checkRow(pieces);
 				if(this.removing.length != 0){
 					this.lines += this.removing.length;
-					this.level = parseInt(this.lines / 10);
-					this.score += this.linesScore[this.removing.length] * (this.level + 1);
+					this.level.current = parseInt(this.lines / 10);
+					this.score += this.linesScore[this.removing.length] * (this.level.current + 1);
 					this.startAnimation = true;
+					
+					if(this.level.current != this.level.old){
+						this.level.old = this.level.current;	
+						this.gameTick.dec(0.1);
+					}
 					
 					//tells the game we need to pause while animating 
 					this.status = 3;
@@ -172,7 +246,7 @@ class game{
 				this.activeBlock++;				
 				
 				//create new block with next block shapeId
-				this.blocks.push(new block(this.activeBlock, this.nextBlock.shapeId, this.level)); 
+				this.blocks.push(new block(this.activeBlock, this.nextBlock.shapeId)); 
 				
 				//set new block id
 				this.nextBlock.shapeId = this.pickBlock();
@@ -289,7 +363,7 @@ class game{
 			this.cnvLevel.fillStyle = "#222";
 			this.cnvLevel.textAlign = "center";
 			this.cnvLevel.fillText('Level', 60,30);
-			this.cnvLevel.fillText(this.level, 60,60);
+			this.cnvLevel.fillText(this.level.current, 60,60);
 		this.cnvLevel.restore();		
 		
 		//LINES
@@ -321,7 +395,7 @@ class game{
 		if(this.startAnimation){
 			this.cnvAni.clearRect(0, 0, 400, 600); 
 			this.cnvAni.save(); 
-			this.cnvAni.scale(1, 1); 
+			this.cnvAni.scale(1, 1);  
 			this.cnvAni.translate(0, 0);				
 				this.animateFlash();
 			this.cnvAni.restore();
@@ -340,6 +414,8 @@ class board{
 		for(let h = 0; h < this.height/30; h++){
 			grid[h] = [];
 			for(let w = 0; w < this.width/30; w++){
+				grid[h][w] = -1;
+				/*
 				if(h < 17){
 					grid[h][w] = -1;
 				}else{
@@ -350,6 +426,7 @@ class board{
 				 	if(w > 0 && h == 19){grid[h][w] = {id: 101, color: "orange", shapeId:1};}else  if(w == 0 && h == 19){grid[h][w] = -1;}	
 					//grid[h][w] = -1;					
 				}
+				*/
 			}
 		}
 		return grid;
@@ -385,41 +462,37 @@ class board{
 		//return number of rows cleared sorted and no duplicates
 		return [...new Set(rowsToRemove)].sort();
 	}	
-	//check collision with walls
 	cc_walls(block, dir = 0){
 		var x = parseInt(block.pos.x);
 		var y = parseInt(block.pos.y);
 		var w = parseInt(block.width[block.shapeId][block.rotated]);
 		var h = parseInt(block.height[block.shapeId][block.rotated]);
-
 		if(dir == 0 && x < 30){return true;}
 		if(dir == 1 && x + w > 270){return true;}
-		if(dir == 2 && y + h > 600){return true;}
+		if(dir == 2 && y + h >= 600){return true;}
 		
 		return false;
 	}
-	//check collision with blocks
 	cc_blocks(block, near = 0){
 		for(let i = 0; i < block.pieces[block.shapeId][block.rotated].length; i++){
 			var gridX = this.calcPos(block.pieces[block.shapeId][block.rotated][i].x) + near;
-			var gridY = this.calcPos(block.pieces[block.shapeId][block.rotated][i].y + 30);
-			
-			if(gridY < 20){
-				if(this.grid[gridY][gridX] != block.id && this.grid[gridY][gridX] != -1){ 
-					return true
-				} 
+			var gridY = this.calcPos(block.pieces[block.shapeId][block.rotated][i].y );
+			var gridY30 = this.calcPos(block.pieces[block.shapeId][block.rotated][i].y+30);
+			if(gridY30 < 20){
+				//checks bottom
+				if(this.grid[gridY30][gridX] != block.id && this.grid[gridY30][gridX] != -1){return true;} 
+				//checks top
+				if(this.grid[gridY][gridX] != block.id && this.grid[gridY][gridX] != -1){return true;} 
 			} 
 		}
 		return false;
 	}
 	cc_game_over(block){
 		for(let i = 0; i < block.pieces[block.shapeId][block.rotated].length; i++){
-			console.log(block.pieces[block.shapeId][block.rotated][i].y)
-			if(block.pieces[block.shapeId][block.rotated][i].y < 0){ return true; }
+			if(block.pieces[block.shapeId][block.rotated][i].y <= 0){ return true; }
 		}
 		return false;
 	}
-	
 	insert(pieces, id){
 		for(let i = 0; i < pieces.length; i++){
 			var x = this.calcPos(pieces[i].x);

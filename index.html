@@ -22,7 +22,11 @@
 		<p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience and security.</p>
 	<![endif]-->
 	<div class="container">
-		<div id="game" class="clearfix">	
+		<div id="game" class="clearfix">
+			<div id="titleScreen">
+				<h1 class="noSelect">tetris</h1>
+				<button id="new" class="noSelect">New Game</button>
+			</div>
 			<div id="gameBoardContainer">
 				<canvas id="moving" width="300" height="600"></canvas>
 				<canvas id="board" width="300" height="600"></canvas>
@@ -33,15 +37,14 @@
 				<canvas id="level" width="120" height="70"></canvas>
 				<canvas id="lines" width="120" height="70"></canvas>
 				<canvas id="nextBlock" width="120" height="120"></canvas>
+				<button id="stop"  class="noSelect">Pause Game</button>
 			</div>
 		</div>
-		
-		<button id="stop">Pause Game</button>
-		<div id="mobileBtns">
-			<button id="left">←</button>
-			<button id="right">→</button>
-			<button id="up">↑</button>
-			<button id="down">↓</button>
+		<div id="mobileBtns" class="onTitleScreen">
+			<button id="left" class="noSelect">←</button>
+			<button id="right" class="noSelect">→</button>
+			<button id="up" class="noSelect">↑</button>
+			<button id="down" class="noSelect">↓</button>
 		</div>
 	</div>
 
