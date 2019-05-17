@@ -55,6 +55,8 @@ window.onload = function(e){
 			g.pause(document.getElementById('stop'));
 		}
 	}
+	//THIS IS DEV REMOVE ME LATER
+	document.getElementById('new').click();
 }; 
 class tick{
 	constructor(lengths){
@@ -111,7 +113,7 @@ class game{
 		//flash animation
 		this.animationRunning = false;
 		this.startAnimation = false;
-		this.animationColor = '#ff07f4';
+		this.animationColor = 'rgba(255,57,76,1)';
 		
 		//Board
 		this.board = new board();
@@ -166,6 +168,15 @@ class game{
 			if(!this.keyAction[40].pressed){
 				this.gameTick.length.current = this.gameTick.length.default;
 			}
+			if(this.keyAction[38].pressed){
+				if((new Date() - this.keyAction[38].when)/1000 >= this.keySpeed.rotate){
+					this.ab.rotate();
+					this.keyAction[38].when = new Date();
+				}
+			}
+			if(this.keyAction[40].pressed){
+				this.gameTick.length.current = this.gameTick.length.speedUp;
+			}
 			if(this.keyAction[37].pressed){
 				if((new Date() - this.keyAction[37].when)/1000 >= this.keySpeed.directions){
 					if(!this.board.cc_walls(this.ab, 0) && !this.board.cc_blocks(this.ab,-1)){
@@ -182,16 +193,7 @@ class game{
 					this.keyAction[39].when = new Date();
 				}
 			}	
-			if(this.keyAction[38].pressed){
-				if((new Date() - this.keyAction[38].when)/1000 >= this.keySpeed.rotate){
-					this.ab.rotate();
-					this.keyAction[38].when = new Date();
-				}
-			}
-			if(this.keyAction[40].pressed){
-				this.gameTick.length.current = this.gameTick.length.speedUp;
-			}
-			
+
 			//check collision with walls
 			if(this.board.cc_walls(this.ab, 2)){
 				this.ab.falling = false; 
@@ -225,6 +227,7 @@ class game{
 				//insert block into grid	
 				this.board.insert(pieces, {id:this.activeBlock, color:colored, shapeId:shapeId});
 
+				/**/
 				//checks to see if 1 or more rows are completed and adds to the line count
 				this.removing = this.board.checkRow(pieces);
 				if(this.removing.length != 0){
@@ -266,7 +269,7 @@ class game{
 		//color flip
 		this.cnvAni.fillStyle = this.animationColor;
 		if((new Date() - this.colorTime)/1000 > 0.20){
-			this.animationColor = (this.animationColor == '#ff07f4'?'#000':'#ff07f4');
+			this.animationColor = (this.animationColor == 'rgba(255,57,76,1)'?'#000':'#ff07f4');
 			this.colorTime = new Date();
 		}
 
@@ -299,106 +302,90 @@ class game{
 		}
 	}	
 	draw(){
+		this.cnv.globalCompositeOperation = 'source-over';	
 		this.cnv.clearRect(0, 0, 400, 600); 
-		this.cnv.save(); 
-		this.cnv.scale(1, 1); 
-		this.cnv.translate(0, 0);
-			//main board white background
-			this.cnv.beginPath();
-				this.cnv.rect(0, 0, 400, 600);
-				this.cnv.fillStyle = "#fff";
-			this.cnv.fill();
-			
-			//next piece white background
-			this.cnvNext.beginPath();
-				this.cnvNext.rect(0, 0, 300, 200);
-				this.cnvNext.fillStyle = "#fff";
-			this.cnvNext.fill();	
-			
-			//draws the next block in the canvas on the right
-			this.nextBlock.draw(this.cnvNext, this.piecesImg);
-			
-			//draw active block
-			this.ab.draw(this.cnv, this.piecesImg);
-			
-			//draw game over
-			this.cnv.font = "10px Arial";
-			this.cnv.fillStyle = "red";
-			this.cnv.fillText((this.status == 2 ? this.statusLookup[this.status] : "" ) , 220, 20);	
 
-		this.cnv.restore();	
+		//this.cnv.scale(1, 1); 
+		//this.cnv.translate(0, 0);
+			//main board white background
+		this.cnv.beginPath();
+			this.cnv.rect(0, 0, 400, 600);
+			this.cnv.fillStyle = "#fff";
+		this.cnv.fill();
+
+		//draw game over
+		this.cnv.font = "10px Arial";
+		this.cnv.fillStyle = "red";
+		this.cnv.fillText((this.status == 2 ? this.statusLookup[this.status] : "" ) , 220, 20);	
+
+		//draw active block
+		this.ab.draw(this.cnv, this.piecesImg);
+
+		//clear next block canvas
+		this.cnvNext.clearRect(0, 0, 300, 200); 
+			
+		//next piece white background
+		this.cnvNext.beginPath();
+			this.cnvNext.rect(0, 0, 300, 200);
+			this.cnvNext.fillStyle = "#fff";
+		this.cnvNext.fill();	
 		
+		//draws the next block in the canvas on the right
+		this.nextBlock.draw(this.cnvNext, this.piecesImg);
+ 
 		//SCORE
 		this.cnvScore.clearRect(0, 0, 120, 70); 
-		this.cnvScore.save(); 
-		this.cnvScore.scale(1, 1); 
-		this.cnvScore.translate(0, 0);	
-			//white background
-			this.cnvScore.beginPath();
-				this.cnvScore.rect(0, 0, 120, 70);
-				this.cnvScore.fillStyle = "#fff";
-			this.cnvScore.fill();
-			
-			//draw number of lines cleared
-			this.cnvScore.font = "700 25px Arial";
-			this.cnvScore.fillStyle = "#222";
-			this.cnvScore.textAlign = "center";
-			this.cnvScore.fillText('Score', 60,30);
-			this.cnvScore.fillText(this.score, 60,60);
-		this.cnvScore.restore();		
+
+		//white background
+		this.cnvScore.beginPath();
+			this.cnvScore.rect(0, 0, 120, 70);
+			this.cnvScore.fillStyle = "#fff";
+		this.cnvScore.fill();
+		
+		//draw number of lines cleared
+		this.cnvScore.font = "700 25px Arial";
+		this.cnvScore.fillStyle = "#222";
+		this.cnvScore.textAlign = "center";
+		this.cnvScore.fillText('Score', 60,30);
+		this.cnvScore.fillText(this.score, 60,60);
 		
 		//LEVEL
 		this.cnvLevel.clearRect(0, 0, 120, 70); 
-		this.cnvLevel.save(); 
-		this.cnvLevel.scale(1, 1); 
-		this.cnvLevel.translate(0, 0);	
-			//white background
-			this.cnvLevel.beginPath();
-				this.cnvLevel.rect(0, 0, 120, 70);
-				this.cnvLevel.fillStyle = "#fff";
-			this.cnvLevel.fill();
-			
-			//draw number of lines cleared
-			this.cnvLevel.font = "700 30px Arial";
-			this.cnvLevel.fillStyle = "#222";
-			this.cnvLevel.textAlign = "center";
-			this.cnvLevel.fillText('Level', 60,30);
-			this.cnvLevel.fillText(this.level.current, 60,60);
-		this.cnvLevel.restore();		
+
+		//white background
+		this.cnvLevel.beginPath();
+			this.cnvLevel.rect(0, 0, 120, 70);
+			this.cnvLevel.fillStyle = "#fff";
+		this.cnvLevel.fill();
 		
+		//draw number of lines cleared
+		this.cnvLevel.font = "700 30px Arial";
+		this.cnvLevel.fillStyle = "#222";
+		this.cnvLevel.textAlign = "center";
+		this.cnvLevel.fillText('Level', 60,30);
+		this.cnvLevel.fillText(this.level.current, 60,60);
+	
 		//LINES
 		this.cnvLines.clearRect(0, 0, 120, 70); 
-		this.cnvLines.save(); 
-		this.cnvLines.scale(1, 1); 
-		this.cnvLines.translate(0, 0);	
-			//white background
-			this.cnvLines.beginPath();
-				this.cnvLines.rect(0, 0, 120, 70);
-				this.cnvLines.fillStyle = "#fff";
-			this.cnvLines.fill();
-			
-			//draw number of lines cleared
-			this.cnvLines.font = "700 30px Arial";
-			this.cnvLines.fillStyle = "#222";
-			this.cnvLines.textAlign = "center";
-			this.cnvLines.fillText('Lines', 60,30);
-			this.cnvLines.fillText(this.lines, 60,60);
-		this.cnvLines.restore();		
+		//white background
+		this.cnvLines.beginPath();
+			this.cnvLines.rect(0, 0, 120, 70);
+			this.cnvLines.fillStyle = "#fff";
+		this.cnvLines.fill();
+		
+		//draw number of lines cleared
+		this.cnvLines.font = "700 30px Arial";
+		this.cnvLines.fillStyle = "#222";
+		this.cnvLines.textAlign = "center";
+		this.cnvLines.fillText('Lines', 60,30);
+		this.cnvLines.fillText(this.lines, 60,60);
 		
 		this.cnvBoard.clearRect(0, 0, 400, 600); 
-		this.cnvBoard.save(); 
-		this.cnvBoard.scale(1, 1); 
-		this.cnvBoard.translate(0, 0);				
-			this.board.draw(this.cnvBoard, this.piecesImg);	
-		this.cnvBoard.restore();
+		this.board.draw(this.cnvBoard, this.piecesImg);	
 
 		if(this.startAnimation){
 			this.cnvAni.clearRect(0, 0, 400, 600); 
-			this.cnvAni.save(); 
-			this.cnvAni.scale(1, 1);  
-			this.cnvAni.translate(0, 0);				
-				this.animateFlash();
-			this.cnvAni.restore();
+			this.animateFlash();
 		}	
 	}
 }
@@ -408,6 +395,14 @@ class board{
 		this.height = height;
 		this.redraw = true;
 		this.grid = this.generateGrid();
+		this.colors = [  'rgba(255, 164, 69, 1)'
+						,'rgba(235, 125, 208, 1)'
+						,'rgba(97, 131, 255, 1)'
+						,'rgba(91, 235, 153, 1)'
+						,'rgba(91, 235, 153, 1)'
+						,'rgba(255, 245, 89, 1)'
+						,'rgba(192,164,255, 1)'
+						,'rgba(191, 163, 255, 1)'];
 	}
 	generateGrid(){
 		var grid = [];
@@ -501,10 +496,13 @@ class board{
 		}
 	}	
 	draw(cnv, img){
+		cnv.globalCompositeOperation = 'color';
 		for(let h = 0; h < this.height / 30; h++){
 			for(let w = 0; w < this.width / 30; w++){
 				if(this.grid[h][w] != -1){
 					cnv.drawImage(img, (this.grid[h][w].shapeId * 30), 0, 30, 30, w * 30, h * 30, 30, 30);
+					cnv.fillStyle = this.colors[this.grid[h][w].shapeId];
+					cnv.fillRect(w * 30 ,h * 30, 30, 30);
 				}
 			}
 		}

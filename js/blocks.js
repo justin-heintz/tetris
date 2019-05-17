@@ -4,7 +4,16 @@ class block{
 		this.id = id;
 		this.shapeId = shapeId;
 		this.pos = {x:30, y:0};
-		this.colors = ['red', 'blue', 'green', 'orange', 'yellow', 'black', 'purple', 'pink', 'DarkOliveGreen'];
+		//['red', 'blue', 'green', 'orange', 'yellow', 'black', 'purple', 'pink', 'DarkOliveGreen'];
+		this.colors = [  'rgba(255, 164, 69, 1)'
+						,'rgba(235, 125, 208, 1)'
+						,'rgba(97, 131, 255, 1)'
+						,'rgba(91, 235, 153, 1)'
+						,'rgba(91, 235, 153, 1)'
+						,'rgba(255, 245, 89, 1)'
+						,'rgba(192,164,255, 1)'
+						,'rgba(191, 163, 255, 1)'];
+ 
 		this.rotated = 0;
 		this.falling = true;
 		this.buildBlock();
@@ -16,7 +25,9 @@ class block{
 		if(this.rotated > 3){this.rotated = 0;}
 		if(this.pieces[this.shapeId][this.rotated].length == 0){this.rotated = 0;}
 		if(this.pos.x < 0){ this.pos.x = 0;}
-		if(this.pos.x + this.width[this.shapeId][this.rotated] > 300){this.pos.x = this.pos.x - (this.pos.x + this.width[this.shapeId][this.rotated] - 300);}
+		if(this.pos.x + this.width[this.shapeId][this.rotated] > 300){
+			this.pos.x = this.pos.x - (this.pos.x + this.width[this.shapeId][this.rotated] - 300);
+		}
 
 		this.buildBlock();
 	}
@@ -25,9 +36,15 @@ class block{
 			this.pos = {x:10, y:20};
 			this.buildBlock();
 		}
+		
 		for(let i=0; i < this.pieces[this.shapeId][this.rotated].length; i++){
+			cnv.globalCompositeOperation = 'source-over';
 			cnv.drawImage(img, (this.shapeId * 30), 0, 30, 30, this.pieces[this.shapeId][this.rotated][i].x, this.pieces[this.shapeId][this.rotated][i].y, 30, 30);
+			cnv.globalCompositeOperation = 'color';
+			cnv.fillStyle = this.colors[this.shapeId];
+			cnv.fillRect(this.pieces[this.shapeId][this.rotated][i].x, this.pieces[this.shapeId][this.rotated][i].y, 30, 30);	
 		}
+		
 	}	
 	emptyArray(){
 		let emptyArray = [];
